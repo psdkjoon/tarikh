@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تمرین ادبیات</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+            direction: rtl; /* برای راست به چپ */
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        p#question-text {
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            font-weight: bold; /* اضافه کردن وزن بیشتر برای دید بهتر سوال */
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.correct {
+            background-color: #28a745;
+        }
+        button.incorrect {
+            background-color: #dc3545;
+        }
+        #feedback {
+            margin-top: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+        }
+        .action-buttons {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap; /* برای واکنش‌گرا بودن دکمه‌ها در صفحه کوچک */
+        }
+        .action-buttons button {
+            background-color: #6c757d;
+        }
+        .action-buttons button:hover {
+            background-color: #5a6268;
+        }
+        #restart-button {
+            background-color: #ffc107;
+            color: #333;
+            display: none; /* در ابتدا پنهان است */
+        }
+        #restart-button:hover {
+            background-color: #e0a800;
+        }
+        #learned-button {
+            background-color: #17a2b8;
+            display: none; /* در ابتدا پنهان است */
+        }
+        #learned-button:hover {
+            background-color: #138496;
+        }
+        /* Style for Progress Bar */
+        #progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        #progress {
+            width: 0%;
+            height: 15px;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            text-align: center;
+            color: white;
+            line-height: 15px;
+            font-size: 0.8em;
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>تمرین ادبیات</h2>
+        <p id="question-text"></p>
+        <div class="options-grid" id="options-container">
+            </div>
+        <div id="feedback"></div>
+        <div class="action-buttons">
+            <button id="next-button" onclick="loadNewQuestion()">سوال بعدی</button>
+            <button id="learned-button" onclick="markAsLearned()">این شاعر را یاد گرفتم</button>
+            <button id="restart-button" onclick="restartQuiz()">شروع مجدد</button>
+        </div>
+        <div id="progress-bar">
+            <div id="progress"></div>
+        </div>
+    </div>
+
+    <script>
+        const originalData = [
+            { author: "عطار نیشابوری", work: "الهی نامه", type: "نظم (مثنوی)" },
+            { author: "نیما یوشیج (علی اسفندیاری)", work: "چشمه", type: "نظم (مثنوی)" },
+            { author: "ترجمه نصرالله منشی", work: "کلیله و دمنه", type: "نثر" },
+            { author: "عنصر المعالی کیکاووس", work: "قابوس نامه", type: "نثر" },
+            { author: "جمال میرصادقی", work: "دیوار", type: "نثر" },
+            { author: "سید علی موسوی گرمارودی", work: "گوشواره عرش (مجموعه اشعار آیینی)", type: "نظم (چارپاره)" },
+            { author: "خواجه نظام الملک", work: "سیاست نامه", type: "نثر" },
+            { author: "محمد بن منور", work: "اسرار التوحید", type: "نثر" },
+            { author: "احمد بن محمد بن زید طوسی", work: "تفسیر سوره یوسف", type: "نثر" },
+            { author: "سعدی", work: "کلیات اشعار (غزلیات)", type: "نظم (غزل)" },
+            { author: "ناصر خسرو", work: "سفر نامه", type: "نثر" },
+            { author: "سعدی", work: "گلستان", type: "نثر و نظم" },
+            { author: "سهراب سپهری", work: "اتاق آبی", type: "نثر" },
+            { author: "جلال آل احمد", work: "ارزیابی شتاب زده", type: "نثر" },
+            { author: "سپیده کاشانی", work: "خاک آزادگان", type: "نظم" },
+            { author: "معصومه آباد", work: "من زنده ام", type: "نثر" },
+            { author: "فردوسی", work: "شاهنامه", type: "نظم (مثنوی)" },
+            { author: "محمود شاهرخی", work: "دلیران و مردان ایران زمین", type: "نظم (مثنوی)" },
+            { author: "مولانا جلاالدین محمد بلخی (مولوی)", work: "مثنوی معنوی", type: "ن نظم (مثنوی)" },
+            { author: "حسین واعظ کاشفی", work: "اخلاق محسنی", type: "نثر" },
+            { author: "عبدالحسین وجدانی", work: "خسرو", type: "نثر" },
+            { author: "سدید الدین محمد عوفی", work: "جوامع الحکایات و لوامع الروایات", type: "نثر" },
+            { author: "نزار قبانی", work: "سمفونی پنجم جنوب", type: "نظم" },
+            { author: "فرانسوا کوپه", work: "مزار شاعر", type: "نثر" },
+            { author: "آندره ژید", work: "مائده های زمینی و مائده های تازه", type: "نثر" },
+            { author: "تولستوی", work: "سه پرسش", type: "نثر" }
+        ];
+
+        let availableAuthors = [];
+        let learnedAuthors = [];
+        let currentQuestion = null;
+        let selectedAuthorForQuestion = null;
+
+        const progressBar = document.getElementById('progress');
+        let totalInitialItemsInRound = 0; // تعداد کل آیتم‌ها در ابتدای هر دور تمرین
+
+        function updateProgressBar() {
+            if (totalInitialItemsInRound === 0) {
+                progressBar.style.width = '100%';
+                progressBar.innerText = '۱۰۰٪ (همه شاعران/اثرها یاد گرفته شده‌اند!)';
+                return;
+            }
+            const answeredInThisRound = totalInitialItemsInRound - availableAuthors.length;
+            const progressPercentage = (answeredInThisRound / totalInitialItemsInRound) * 100;
+
+            progressBar.style.width = `${progressPercentage}%`;
+            progressBar.innerText = `${Math.round(progressPercentage)}%`;
+
+            if (availableAuthors.length === 0) {
+                 progressBar.style.width = '100%';
+                 progressBar.innerText = '۱۰۰٪ (دور فعلی به پایان رسید!)';
+            }
+        }
+
+        function initializeQuiz() {
+            learnedAuthors = JSON.parse(localStorage.getItem('learnedAuthors')) || [];
+            availableAuthors = originalData.filter(item => !learnedAuthors.some(learned => learned.author === item.author && learned.work === item.work));
+            totalInitialItemsInRound = availableAuthors.length; // تعداد آیتم‌ها برای دور جدید
+            shuffleArray(availableAuthors);
+            loadNewQuestion();
+            document.getElementById('restart-button').style.display = 'none';
+            updateProgressBar();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function loadNewQuestion() {
+            if (availableAuthors.length === 0) {
+                document.getElementById('question-text').innerText = "تمرینات این دور به پایان رسید! می‌توانید دوباره شروع کنید.";
+                document.getElementById('options-container').innerHTML = '';
+                document.getElementById('feedback').innerText = '';
+                document.getElementById('next-button').style.display = 'none';
+                document.getElementById('learned-button').style.display = 'none';
+                document.getElementById('restart-button').style.display = 'block';
+                updateProgressBar();
+                return;
+            }
+
+            document.getElementById('feedback').innerText = '';
+            document.getElementById('next-button').style.display = 'none';
+            document.getElementById('learned-button').style.display = 'none';
+            document.getElementById('options-container').innerHTML = '';
+
+            shuffleArray(availableAuthors);
+            selectedAuthorForQuestion = availableAuthors[0];
+
+            document.getElementById('question-text').innerText = `اثر «${selectedAuthorForQuestion.work}» از کیست؟ (نوع: ${selectedAuthorForQuestion.type})`;
+
+            let correctAuthorName = selectedAuthorForQuestion.author;
+            let options = [correctAuthorName];
+
+            let incorrectOptionsPool = originalData.filter(item => item.author !== correctAuthorName);
+            shuffleArray(incorrectOptionsPool);
+
+            for (let i = 0; options.length < 4 && i < incorrectOptionsPool.length; i++) {
+                if (!options.includes(incorrectOptionsPool[i].author)) {
+                    options.push(incorrectOptionsPool[i].author);
+                }
+            }
+
+            while (options.length < 4) {
+                 const randomAuthor = originalData[Math.floor(Math.random() * originalData.length)].author;
+                 if (!options.includes(randomAuthor)) {
+                     options.push(randomAuthor);
+                 }
+            }
+
+            shuffleArray(options);
+
+            const optionsContainer = document.getElementById('options-container');
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerText = option;
+                button.onclick = () => checkAnswer(option, correctAuthorName, button);
+                optionsContainer.appendChild(button);
+            });
+            updateProgressBar();
+        }
+
+        function checkAnswer(selectedOption, correctOption, button) {
+            const feedbackElement = document.getElementById('feedback');
+            const allButtons = document.querySelectorAll('#options-container button');
+
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+                if (btn.innerText === correctOption) {
+                    btn.classList.add('correct');
+                }
+            });
+
+            if (selectedOption === correctOption) {
+                feedbackElement.innerText = 'پاسخ صحیح است! 🎉';
+                feedbackElement.style.color = '#28a745';
+                button.classList.add('correct');
+                document.getElementById('learned-button').style.display = 'block';
+            } else {
+                feedbackElement.innerText = `پاسخ اشتباه است. پاسخ صحیح: ${correctOption}`;
+                feedbackElement.style.color = '#dc3545';
+                button.classList.add('incorrect');
+                document.getElementById('learned-button').style.display = 'none';
+            }
+            document.getElementById('next-button').style.display = 'block';
+            updateProgressBar();
+        }
+
+        function markAsLearned() {
+            if (selectedAuthorForQuestion) {
+                if (!learnedAuthors.some(la => la.author === selectedAuthorForQuestion.author && la.work === selectedAuthorForQuestion.work)) {
+                    learnedAuthors.push(selectedAuthorForQuestion);
+                    localStorage.setItem('learnedAuthors', JSON.stringify(learnedAuthors)); // ذخیره در localStorage
+                }
+                availableAuthors = availableAuthors.filter(item => item !== selectedAuthorForQuestion);
+                selectedAuthorForQuestion = null;
+                loadNewQuestion();
+            }
+        }
+
+        function restartQuiz() {
+            learnedAuthors = [];
+            localStorage.removeItem('learnedAuthors');
+            initializeQuiz();
+        }
+
+        window.onload = initializeQuiz;
+    </script>
+</body>
+</html>
